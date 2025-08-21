@@ -2,14 +2,13 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// GEÇİCİ: ENV yerine sabit konfig (sadece teşhis için)
 const firebaseConfig = {
-  apiKey: "AIzaSyAY2_MdR6K7H16aSCrFuhSobF1fErGk4v4",
-  authDomain: "carsamba-5714a.firebaseapp.com",
-  projectId: "carsamba-5714a",
-  storageBucket: "carsamba-5714a.firebasestorage.app",
-  messagingSenderId: "265201760422",
-  appId: "1:265201760422:web:ec9385efbc81d4d4ae1c67",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
