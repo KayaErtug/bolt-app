@@ -223,15 +223,15 @@ const DashboardPage: React.FC = () => {
 
         <nav className="mt-2 grid gap-2">
           {[
-            { icon: Home, label: "Home", path: "/dashboard" },
-            { icon: Trophy, label: "Achievements", path: "/achievements" },
-            { icon: Users, label: "Referrals", path: "/referrals" },
-            { icon: TrendingUp, label: "Leaderboard", path: "/leaderboard" },
-            { icon: Settings, label: "Settings", path: "/settings" },
-            { icon: Flame, label: "Daily Check-in", path: "/daily-checkin" },
-            { icon: ListChecks, label: "Tasks", path: "/tasks" },
-            { icon: Star, label: "NFT Showcase", path: "/nft-showcase" },
-            { icon: ShieldCheck, label: "Portfolio", path: "/portfolio" },
+            { icon: Home,       label: "Dashboard",       path: "/dashboard" },
+            { icon: Users,      label: "Referrals",       path: "/referrals" },
+            { icon: Flame,      label: "Daily Check-In",  path: "/daily-checkin" },
+            { icon: Star,       label: "NFT Collections", path: "/nft-showcase" }, // Rotan sende /nft ise onu yaz
+            { icon: ListChecks, label: "Tasks",           path: "/tasks" },
+            { icon: TrendingUp, label: "Leaderboard",     path: "/leaderboard" },
+            { icon: Trophy,     label: "Achievements",    path: "/achievements" },
+            { icon: ShieldCheck,label: "Portfolio",       path: "/portfolio" },
+            { icon: Settings,   label: "Settings",        path: "/settings" },
           ].map((item) => {
             const Icon = item.icon;
             return (
