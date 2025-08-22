@@ -15,14 +15,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate("/dashboard"); // ✅ giriş sonrası yönlendirme
+      navigate("/dashboard");
     } catch {}
   };
 
   const onGoogle = async () => {
     try {
       await loginWithGoogle();
-      navigate("/dashboard"); // ✅ Google giriş sonrası yönlendirme
+      navigate("/dashboard");
     } catch {}
   };
 
@@ -34,9 +34,9 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg">
               <span className="text-xl font-bold">M</span>
             </div>
-            <h1 className="mt-4 text-2xl font-semibold text-white">Tekrar Hoş Geldin</h1>
+            <h1 className="mt-4 text-2xl font-semibold text-white">Welcome Back</h1>
             <p className="mt-1 text-sm text-white/60">
-              Hesabına giriş yap ve Maris Coin avantajlarını keşfetmeye devam et.
+              Sign in to your account and continue exploring Maris Coin benefits.
             </p>
           </div>
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
             <div className="mx-6 mb-2 rounded-lg border border-red-400/30 bg-red-500/10 text-red-200 px-3 py-2 text-sm">
               {error}{" "}
               <button className="underline ml-2" onClick={clearError}>
-                kapat
+                Close
               </button>
             </div>
           )}
@@ -56,14 +56,14 @@ export default function LoginPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 transition px-4 py-2.5 text-white"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Chrome className="size-4" />}
-              <span>{loading ? "Bağlanılıyor..." : "Google ile Giriş Yap"}</span>
+              <span>{loading ? "Connecting..." : "Sign in with Google"}</span>
             </button>
           </div>
 
           <div className="px-6 py-3">
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-white/10" />
-              <div className="text-xs text-white/50">veya e-posta ile</div>
+              <div className="text-xs text-white/50">or with email</div>
               <div className="h-px flex-1 bg-white/10" />
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function LoginPage() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
               <input
                 className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder-white/40 pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/40"
-                placeholder="E-posta"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -83,7 +83,7 @@ export default function LoginPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
               <input
                 className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder-white/40 pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/40"
-                placeholder="Şifre"
+                placeholder="Password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -96,11 +96,11 @@ export default function LoginPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 transition disabled:opacity-60"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : null}
-              <span>{loading ? "Giriş yapılıyor..." : "Giriş Yap"}</span>
+              <span>{loading ? "Signing in..." : "Sign In"}</span>
             </button>
 
             <p className="text-[11px] text-white/40 text-center">
-              Şifreni unuttuysan yeni şifre oluşturabilirsin.
+              Forgot your password? You can reset it anytime.
             </p>
           </form>
         </div>

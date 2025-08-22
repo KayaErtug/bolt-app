@@ -16,14 +16,14 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       await register({ email, displayName }, password);
-      navigate("/dashboard"); // ✅ kayıt sonrası yönlendirme
+      navigate("/dashboard");
     } catch {}
   };
 
   const onGoogle = async () => {
     try {
       await loginWithGoogle();
-      navigate("/dashboard"); // ✅ Google kayıt sonrası yönlendirme
+      navigate("/dashboard");
     } catch {}
   };
 
@@ -35,9 +35,9 @@ export default function RegisterPage() {
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg">
               <span className="text-xl font-bold">M</span>
             </div>
-            <h1 className="mt-4 text-2xl font-semibold text-white">Maris Coin’e Katıl</h1>
+            <h1 className="mt-4 text-2xl font-semibold text-white">Join Maris Coin</h1>
             <p className="mt-1 text-sm text-white/60">
-              Güvenli kayıt, birkaç saniyede hazır. Sonra paneline yönlendireceğiz.
+              Secure registration, ready in seconds. You will be redirected to your dashboard.
             </p>
           </div>
 
@@ -45,7 +45,7 @@ export default function RegisterPage() {
             <div className="mx-6 mb-2 rounded-lg border border-red-400/30 bg-red-500/10 text-red-200 px-3 py-2 text-sm">
               {error}{" "}
               <button className="underline ml-2" onClick={clearError}>
-                kapat
+                Close
               </button>
             </div>
           )}
@@ -57,14 +57,14 @@ export default function RegisterPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 transition px-4 py-2.5 text-white"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Chrome className="size-4" />}
-              <span>{loading ? "Bağlanılıyor..." : "Google ile Devam Et"}</span>
+              <span>{loading ? "Connecting..." : "Continue with Google"}</span>
             </button>
           </div>
 
           <div className="px-6 py-3">
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-white/10" />
-              <div className="text-xs text-white/50">veya e-posta ile</div>
+              <div className="text-xs text-white/50">or with email</div>
               <div className="h-px flex-1 bg-white/10" />
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function RegisterPage() {
               <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
               <input
                 className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder-white/40 pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/40"
-                placeholder="Ad (opsiyonel)"
+                placeholder="Name (optional)"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -84,7 +84,7 @@ export default function RegisterPage() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
               <input
                 className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder-white/40 pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/40"
-                placeholder="E-posta"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -94,7 +94,7 @@ export default function RegisterPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
               <input
                 className="w-full rounded-lg bg-white/5 border border-white/15 text-white placeholder-white/40 pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/40"
-                placeholder="Şifre (min 6 karakter)"
+                placeholder="Password (min 6 characters)"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,11 +107,11 @@ export default function RegisterPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 transition disabled:opacity-60"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : null}
-              <span>{loading ? "Kayıt oluşturuluyor..." : "Hesap Oluştur"}</span>
+              <span>{loading ? "Creating account..." : "Create Account"}</span>
             </button>
 
             <p className="text-[11px] text-white/40 text-center">
-              Kaydolarak şartları kabul edersiniz. Her zaman çıkış yapabilirsiniz.
+              By registering, you agree to the terms. You can always log out anytime.
             </p>
           </form>
         </div>

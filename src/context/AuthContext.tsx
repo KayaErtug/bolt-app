@@ -1,5 +1,7 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, googleProvider } from "../lib/firebase";
+
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -10,12 +12,16 @@ import {
   User as FirebaseUser,
 } from "firebase/auth";
 
-// Kullanıcı tipi
+// Global user type for the app
 export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
   photoURL?: string | null;
+
+  // ✅ Dashboard fields
+  level?: number;
+  totalPoints?: number;
 }
 
 interface AuthContextType {
@@ -33,13 +39,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Firebase User → App User mapper
 const fbUserToUser = (u: FirebaseUser | null): User | null =>
-  u ? { uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL } : null;
+  u
+    ? {
+        uid: u.uid,
+        email: u.email,
+        displayName: u.displayName,
+        photoURL: u.photoURL,
+        level: 1,
+        totalPoints: 0,
+      }
+    : null;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [boot, setBoot] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [boot, setBoot] = useState(true);        // Initial load
+  const [loading, setLoading] = useState(false); // Form actions
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,14 +68,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const normalizeError = (e: any) => {
     const code = typeof e?.code === "string" ? e.code : "";
-    if (code.includes("auth/invalid-credential")) return "E-posta veya şifre hatalı.";
-    if (code.includes("auth/user-not-found")) return "Kullanıcı bulunamadı.";
-    if (code.includes("auth/wrong-password")) return "Şifre hatalı.";
-    if (code.includes("auth/email-already-in-use")) return "Bu e-posta zaten kayıtlı.";
-    if (code.includes("auth/weak-password")) return "Şifre çok zayıf (en az 6 karakter).";
-    if (code.includes("auth/popup-closed-by-user")) return "Google penceresi kapatıldı.";
-    if (code.includes("auth/invalid-api-key")) return "API anahtarı geçersiz (ENV ayarlarını kontrol edin).";
-    return "Bir hata oluştu. Lütfen tekrar deneyin.";
+    if (code.includes("auth/invalid-credential")) return "Invalid email or password.";
+    if (code.includes("auth/user-not-found")) return "User not found.";
+    if (code.includes("auth/wrong-password")) return "Incorrect password.";
+    if (code.includes("auth/email-already-in-use")) return "This email is already registered.";
+    if (code.includes("auth/weak-password")) return "Password is too weak (minimum 6 characters).";
+    if (code.includes("auth/popup-closed-by-user")) return "Google sign-in window was closed.";
+    if (code.includes("auth/invalid-api-key")) return "Invalid API key (check your ENV settings).";
+    return "An error occurred. Please try again.";
   };
 
   const login = async (email: string, password: string) => {
@@ -93,6 +109,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData.displayName) {
         await updateProfile(cred.user, { displayName: userData.displayName });
       }
+      // ✅ Default values for new user
+      setUser({
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: cred.user.displayName,
+        photoURL: cred.user.photoURL,
+        level: 1,
+        totalPoints: 0,
+      });
     } catch (e) {
       setError(normalizeError(e));
       throw e;
@@ -105,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true); setError(null);
     try {
       await signOut(auth);
+      setUser(null);
     } catch (e) {
       setError(normalizeError(e));
       throw e;
@@ -119,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (userData.displayName) {
         await updateProfile(auth.currentUser, { displayName: userData.displayName });
+        setUser((prev) => prev ? { ...prev, displayName: userData.displayName } : prev);
       }
     } catch (e) {
       setError(normalizeError(e));
@@ -146,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   if (boot) {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-gray-600">
-        Uygulama yükleniyor…
+        Loading app…
       </div>
     );
   }
