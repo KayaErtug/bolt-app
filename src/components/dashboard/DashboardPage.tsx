@@ -18,8 +18,10 @@ import {
   MessageSquare,
   PenTool,
   ListChecks,
+  Star,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { NavLink } from "react-router-dom";
 
 /* -------------------------------------------------------------------------- */
 /*  Yardımcı bileşenler                                                       */
@@ -221,22 +223,32 @@ const DashboardPage: React.FC = () => {
 
         <nav className="mt-2 grid gap-2">
           {[
-            { icon: Home, label: "Home" },
-            { icon: Trophy, label: "Achievements" },
-            { icon: Users, label: "Referrals" },   // 🔹 Yeni eklendi
-            { icon: Users, label: "Leaderboard" },
-            { icon: Settings, label: "Settings" },
+            { icon: Home, label: "Home", path: "/dashboard" },
+            { icon: Trophy, label: "Achievements", path: "/achievements" },
+            { icon: Users, label: "Referrals", path: "/referrals" },
+            { icon: TrendingUp, label: "Leaderboard", path: "/leaderboard" },
+            { icon: Settings, label: "Settings", path: "/settings" },
+            { icon: Flame, label: "Daily Check-in", path: "/daily-checkin" },
+            { icon: ListChecks, label: "Tasks", path: "/tasks" },
+            { icon: Star, label: "NFT Showcase", path: "/nft-showcase" },
+            { icon: ShieldCheck, label: "Portfolio", path: "/portfolio" },
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <a
+              <NavLink
                 key={item.label}
-                href="#"
-                className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10"
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl border border-white/10 px-3 py-2 transition ${
+                    isActive
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
+                      : "bg-white/5 hover:bg-white/10 text-white/80"
+                  }`
+                }
               >
-                <Icon className="h-5 w-5 text-white/80 group-hover:text-white" />
+                <Icon className="h-5 w-5" />
                 <span className="text-sm">{item.label}</span>
-              </a>
+              </NavLink>
             );
           })}
         </nav>
