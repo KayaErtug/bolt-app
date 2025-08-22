@@ -12,7 +12,6 @@ import {
   Target,
   Coins,
   Flame,
-  Star,
   Users,
   TrendingUp,
   ShieldCheck,
@@ -107,7 +106,6 @@ const IconMap = {
   message: MessageSquare,
   pen: PenTool,
   tasks: ListChecks,
-  star: Star,
   users: Users,
   trophy: Trophy,
   target: Target,
@@ -193,50 +191,11 @@ const DashboardPage: React.FC = () => {
   };
 
   const achievements: Achievement[] = [
-    {
-      id: "early-adopter",
-      title: "Early Adopter",
-      desc: "Joined in the first wave",
-      points: 50,
-      unlocked: true,
-      icon: "badge",
-    },
-    {
-      id: "streak-7",
-      title: "7-Day Streak",
-      desc: "Login 7 days in a row",
-      points: 70,
-      progress: 0.85,
-      unlocked: false,
-      icon: "flame",
-    },
-    {
-      id: "community-helper",
-      title: "Community Helper",
-      desc: "Help 3 new members",
-      points: 120,
-      progress: 0.33,
-      unlocked: false,
-      icon: "message",
-    },
-    {
-      id: "content-creator",
-      title: "Content Creator",
-      desc: "Publish a guide or video",
-      points: 150,
-      progress: 0.2,
-      unlocked: false,
-      icon: "pen",
-    },
-    {
-      id: "quest-master",
-      title: "Quest Master",
-      desc: "Complete 5 quest types",
-      points: 200,
-      progress: 0.6,
-      unlocked: false,
-      icon: "tasks",
-    },
+    { id: "early-adopter", title: "Early Adopter", desc: "Joined in the first wave", points: 50, unlocked: true, icon: "badge" },
+    { id: "streak-7", title: "7-Day Streak", desc: "Login 7 days in a row", points: 70, progress: 0.85, unlocked: false, icon: "flame" },
+    { id: "community-helper", title: "Community Helper", desc: "Help 3 new members", points: 120, progress: 0.33, unlocked: false, icon: "message" },
+    { id: "content-creator", title: "Content Creator", desc: "Publish a guide or video", points: 150, progress: 0.2, unlocked: false, icon: "pen" },
+    { id: "quest-master", title: "Quest Master", desc: "Complete 5 quest types", points: 200, progress: 0.6, unlocked: false, icon: "tasks" },
   ];
 
   const activities = [
@@ -261,21 +220,25 @@ const DashboardPage: React.FC = () => {
         </div>
 
         <nav className="mt-2 grid gap-2">
-          {[{ icon: Home, label: "Home" }, { icon: Trophy, label: "Achievements" }, { icon: Users, label: "Leaderboard" }, { icon: Settings, label: "Settings" }].map(
-            (item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.label}
-                  href="#"
-                  className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10"
-                >
-                  <Icon className="h-5 w-5 text-white/80 group-hover:text-white" />
-                  <span className="text-sm">{item.label}</span>
-                </a>
-              );
-            }
-          )}
+          {[
+            { icon: Home, label: "Home" },
+            { icon: Trophy, label: "Achievements" },
+            { icon: Users, label: "Referrals" },   // 🔹 Yeni eklendi
+            { icon: Users, label: "Leaderboard" },
+            { icon: Settings, label: "Settings" },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.label}
+                href="#"
+                className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10"
+              >
+                <Icon className="h-5 w-5 text-white/80 group-hover:text-white" />
+                <span className="text-sm">{item.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
         <button
@@ -317,7 +280,7 @@ const DashboardPage: React.FC = () => {
         {/* Content */}
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6">
           {/* KPI Row */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md flex flex-col items-center justify-center">
               <h2 className="text-sm text-white/70">XP Progress</h2>
               <div className="mt-3">
@@ -327,6 +290,7 @@ const DashboardPage: React.FC = () => {
                 {stats.xp} / {stats.nextLevelXp}
               </p>
             </div>
+
             <StatCard
               title="Points"
               value={stats.points.toLocaleString()}
@@ -334,6 +298,7 @@ const DashboardPage: React.FC = () => {
               icon={Coins}
               gradient="from-emerald-500/20 via-emerald-500/10 to-transparent"
             />
+
             <StatCard
               title="Streak"
               value={`${stats.streak} days`}
@@ -341,11 +306,18 @@ const DashboardPage: React.FC = () => {
               icon={Flame}
               gradient="from-orange-500/20 via-orange-500/10 to-transparent"
             />
+
+            <StatCard
+              title="Referrals"
+              value={stats.referrals.toLocaleString()}
+              delta="+3 this month"
+              icon={Users}
+              gradient="from-sky-500/20 via-sky-500/10 to-transparent"
+            />
           </div>
 
           {/* Achievements + Activity */}
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {/* Achievements */}
             <section className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -363,7 +335,6 @@ const DashboardPage: React.FC = () => {
               </div>
             </section>
 
-            {/* Activity */}
             <section className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Recent Activity</h2>
