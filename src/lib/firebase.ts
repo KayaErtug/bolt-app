@@ -1,25 +1,20 @@
-// src/lib/firebase.ts
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { initializeApp } from "firebase/app"
+import { getAuth, GoogleAuthProvider } from "firebase/auth"
+import { getFirestore } from "firebase/firestore"
+import { getStorage } from "firebase/storage"
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+  apiKey: "AIzaSyDjeAUeeJiCvOFP_ixdKf8e6XrLC2Eyf_w",
+  authDomain: "maris-coin-app.firebaseapp.com",
+  projectId: "maris-coin-app",
+  storageBucket: "maris-coin-app.appspot.com",
+  messagingSenderId: "117225048226",
+  appId: "1:117225048226:web:d289df17af4b80f57caffb",
+}
 
-// 🔎 TEŞHİS LOGU (düz yazı)
-console.log(
-  "ENV CHECK → apiKeyPrefix=" + String(firebaseConfig.apiKey || "").slice(0, 8) +
-  " projectId=" + String(firebaseConfig.projectId) +
-  " authDomain=" + String(firebaseConfig.authDomain)
-);
+const app = initializeApp(firebaseConfig)
 
-
-// Burada hata fırlatmıyoruz; sadece log alıyoruz.
-export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+export const auth = getAuth(app)
+export const googleProvider = new GoogleAuthProvider()
+export const db = getFirestore(app)
+export const storage = getStorage(app)
