@@ -1,24 +1,46 @@
-import { createContext, useContext, useEffect, useState } from "react"
-import { onAuthStateChanged, User } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+// AuthContext.tsx
 
-interface AuthContextType {
+import React, { createContext, useContext, useEffect, useState } from "react"
+import { auth } from "@/lib/firebase"
+import { onAuthStateChanged, signOut, User } from "firebase/auth"
+
+type AuthContextType = {
   user: User | null
+  walletAddress: string | null
+  setWalletAddress: (addr: string | null) => void
+  logout: () => Promise<void>
+  loading: boolean
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null })
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
+  const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser)
+      setLoading(false)
     })
     return () => unsubscribe()
   }, [])
 
-  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+  const logout = async () => {
+    setWalletAddress(null)
+    await signOut(auth)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, walletAddress, setWalletAddress, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider")
+  return ctx
+}

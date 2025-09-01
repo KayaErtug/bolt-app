@@ -1,10 +1,11 @@
+// LoginForm.tsx
+
 import { useState } from "react"
 import { auth, googleProvider } from "@/lib/firebase"
 import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
 } from "firebase/auth"
 import { useAuth } from "@/context/AuthContext"
 
@@ -34,7 +35,7 @@ function humanizeFirebaseError(code: string) {
 }
 
 export default function LoginForm() {
-  const { user } = useAuth()
+  const { user, walletAddress, setWalletAddress, logout } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -45,8 +46,6 @@ export default function LoginForm() {
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [loadingLogout, setLoadingLogout] = useState(false)
   const [loadingMetaMask, setLoadingMetaMask] = useState(false)
-
-  const [walletAddress, setWalletAddress] = useState<string | null>(null)
 
   const loginWithGoogle = async () => {
     setError(null); setInfo(null); setLoadingGoogle(true)
@@ -118,11 +117,10 @@ export default function LoginForm() {
     }
   }
 
-  const logout = async () => {
+  const handleLogout = async () => {
     setError(null); setInfo(null); setLoadingLogout(true)
     try {
-      await signOut(auth)
-      setWalletAddress(null)
+      await logout()
       setInfo("You have been logged out.")
     } catch {
       setError("Logout failed.")
@@ -186,7 +184,7 @@ export default function LoginForm() {
                   <p className="text-gray-400">Wallet: {walletAddress.substring(0, 6)}...{walletAddress.slice(-4)}</p>
                 )}
                 <Button
-                  onClick={logout}
+                  onClick={handleLogout}
                   disabled={loadingLogout}
                   className="w-full rounded-full bg-red-500 hover:bg-red-600 disabled:opacity-60"
                 >

@@ -1,6 +1,6 @@
 // Dosya: src/components/dashboard/DashboardPage.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Home,
   Trophy,
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { NavLink } from "react-router-dom";
+import { Gamepad2 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
 /*  Yardımcı bileşenler                                                       */
@@ -113,54 +114,6 @@ const IconMap = {
   target: Target,
 } as const;
 
-const AchievementBadge: React.FC<{ a: Achievement }> = ({ a }) => {
-  const Icon = a.icon ? IconMap[a.icon] ?? Trophy : Trophy;
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md hover:shadow-lg hover:shadow-purple-500/10 transition-shadow">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-purple-500/20 to-transparent">
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-white">{a.title}</p>
-          {a.desc && <p className="truncate text-xs text-white/60">{a.desc}</p>}
-        </div>
-        {a.unlocked ? (
-          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-medium text-emerald-300 border border-emerald-400/20">
-            Unlocked
-          </span>
-        ) : (
-          <span className="ml-auto rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium text-white/70 border border-white/10">
-            Locked
-          </span>
-        )}
-      </div>
-
-      {typeof a.progress === "number" && !a.unlocked && (
-        <div className="mt-3">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-purple-400 to-emerald-400"
-              style={{ width: `${Math.round(a.progress * 100)}%` }}
-            />
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-white/60">
-            <span>Progress</span>
-            <span>{Math.round(a.progress * 100)}%</span>
-          </div>
-        </div>
-      )}
-
-      {typeof a.points === "number" && (
-        <div className="mt-3 flex items-center gap-2 text-xs text-white/70">
-          <Coins className="h-4 w-4 text-amber-300" />
-          <span>+{a.points} pts</span>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const ActivityItem: React.FC<{ text: string; time: string; pts?: number }> = ({ text, time, pts }) => (
   <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
     <div className="h-2 w-2 translate-y-2 rounded-full bg-emerald-400 shadow-[0_0_12px] shadow-emerald-400/50" />
@@ -182,6 +135,7 @@ const ActivityItem: React.FC<{ text: string; time: string; pts?: number }> = ({ 
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
+  const [showAllMenus, setShowAllMenus] = useState(false);
 
   const stats = {
     level: 6,
@@ -192,19 +146,24 @@ const DashboardPage: React.FC = () => {
     referrals: 12,
   };
 
-  const achievements: Achievement[] = [
-    { id: "early-adopter", title: "Early Adopter", desc: "Joined in the first wave", points: 50, unlocked: true, icon: "badge" },
-    { id: "streak-7", title: "7-Day Streak", desc: "Login 7 days in a row", points: 70, progress: 0.85, unlocked: false, icon: "flame" },
-    { id: "community-helper", title: "Community Helper", desc: "Help 3 new members", points: 120, progress: 0.33, unlocked: false, icon: "message" },
-    { id: "content-creator", title: "Content Creator", desc: "Publish a guide or video", points: 150, progress: 0.2, unlocked: false, icon: "pen" },
-    { id: "quest-master", title: "Quest Master", desc: "Complete 5 quest types", points: 200, progress: 0.6, unlocked: false, icon: "tasks" },
-  ];
-
   const activities = [
     { text: "New referral joined", time: "2h ago", pts: 100 },
     { text: "Completed social task", time: "1d ago", pts: 25 },
     { text: "Daily login bonus", time: "1d ago", pts: 10 },
     { text: "Published an educational post", time: "3d ago", pts: 60 },
+  ];
+
+  const menus = [
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: Users, label: "Referrals", path: "/referrals" },
+    { icon: Flame, label: "Daily Check-In", path: "/daily-checkin" },
+    { icon: Star, label: "NFT Collections", path: "/nft-showcase" },
+    { icon: ListChecks, label: "Tasks", path: "/tasks" },
+    { icon: TrendingUp, label: "Leaderboard", path: "/leaderboard" },
+    { icon: Trophy, label: "Achievements", path: "/achievements" },
+    { icon: ShieldCheck, label: "Portfolio", path: "/portfolio" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+    { icon: Gamepad2, label: "Activation Zone", path: "/activation-zone" },
   ];
 
   return (
@@ -222,17 +181,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         <nav className="mt-2 grid gap-2">
-          {[
-            { icon: Home,       label: "Dashboard",       path: "/dashboard" },
-            { icon: Users,      label: "Referrals",       path: "/referrals" },
-            { icon: Flame,      label: "Daily Check-In",  path: "/daily-checkin" },
-            { icon: Star,       label: "NFT Collections", path: "/nft-showcase" }, // Rotan sende /nft ise onu yaz
-            { icon: ListChecks, label: "Tasks",           path: "/tasks" },
-            { icon: TrendingUp, label: "Leaderboard",     path: "/leaderboard" },
-            { icon: Trophy,     label: "Achievements",    path: "/achievements" },
-            { icon: ShieldCheck,label: "Portfolio",       path: "/portfolio" },
-            { icon: Settings,   label: "Settings",        path: "/settings" },
-          ].map((item) => {
+          {menus.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -275,7 +224,7 @@ const DashboardPage: React.FC = () => {
           </div>
 
           <button className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">
-            <Bell className="h-5 w-5" />
+            <Bell className="h-5 w-5 text-white/70" />
           </button>
 
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-1.5">
@@ -291,6 +240,37 @@ const DashboardPage: React.FC = () => {
 
         {/* Content */}
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6">
+          {/* Menüler Mobil İçin */}
+          <div className="mb-6 lg:hidden">
+            <div className="grid gap-2">
+              {(showAllMenus ? menus : menus.slice(0, 4)).map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.label}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-xl border border-white/10 px-3 py-2 transition ${
+                        isActive
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
+                          : "bg-white/5 hover:bg-white/10 text-white/80"
+                      }`
+                    }
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="text-sm">{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowAllMenus(!showAllMenus)}
+              className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 py-2 text-sm hover:bg-white/10"
+            >
+              {showAllMenus ? "Collapse" : "View All"}
+            </button>
+          </div>
+
           {/* KPI Row */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md flex flex-col items-center justify-center">
@@ -328,25 +308,8 @@ const DashboardPage: React.FC = () => {
             />
           </div>
 
-          {/* Achievements + Activity */}
+          {/* Activity */}
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <section className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Achievements</h2>
-                  <p className="text-sm text-white/60">Unlock badges by completing quests</p>
-                </div>
-                <div className="hidden md:block">
-                  <ProgressRing value={stats.xp / stats.nextLevelXp} label="To Next Level" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {achievements.map((a) => (
-                  <AchievementBadge key={a.id} a={a} />
-                ))}
-              </div>
-            </section>
-
             <section className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Recent Activity</h2>
@@ -357,9 +320,6 @@ const DashboardPage: React.FC = () => {
                   <ActivityItem key={idx} text={it.text} time={it.time} pts={it.pts} />
                 ))}
               </div>
-              <button className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 py-2 text-sm hover:bg-white/10">
-                View all
-              </button>
             </section>
           </div>
         </main>
