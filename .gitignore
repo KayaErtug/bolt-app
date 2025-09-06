@@ -1,7 +1,16 @@
-﻿node_modules/
+# Node.js
+node_modules/
 dist/
-.vite/
-.cache/
 .env
-.env.*
 .DS_Store
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Vercel
+.vercel/
+
+# IDE & Editor
+.vscode/
+.idea/
