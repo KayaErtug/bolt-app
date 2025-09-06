@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // USERS collection
+    match /users/{userId} {
+      // Current behavior: any signed-in user can read profiles
+      // If you prefer stricter privacy: replace with `allow read: if isOwner(userId);`
+      allow read: if isSignedIn();
+
+      // Allow a user to create ONLY safe profile fields
+      allow create: if isOwner(userId) && isUserCreateSafe();
+
+      // Allow a user to update their doc but NOT protected fields
+      allow update: if isOwner(userId) && isUserUpdateSafe();
+
+      allow delete: if false;
+
+      function isUserCreateSafe() {
+        // Client can set ONLY non-sensitive fields on create
+        return request.resource.data.keys().hasOnly([
+          'displayName', 'avatarUrl', 'country', 'language',
+          'twitter', 'telegram', 'walletAddress', 'createdAt', 'updatedAt'
+        ]);
+      }
+
+      function isUserUpdateSafe() {
+        let d = request.resource.data.diff(resource.data);
+
+        // Client must NOT change these sensitive/derived fields.
+        // Using explicit changedKeys() checks to avoid accidental writes.
+        return !(
+          'points' in d.changedKeys() ||
+          'activeScore' in d.changedKeys() ||
+          'active' in d.changedKeys() ||
+          'streakDays' in d.changedKeys() ||
+          'invitedCount' in d.changedKeys() ||
+          'activeReferrals' in d.changedKeys() ||
+          'pendingRewards' in d.changedKeys() ||
+          'referralCode' in d.changedKeys() ||
+          'roles' in d.changedKeys() ||
+          'createdAt' in d.changedKeys()
+        );
+      }
+    }
+
+    // INVITES collection
+    match /invites/{inviteId} {
+      // Only the referrer or the invitee can read the invite
+      allow read: if isSignedIn() && (
+        resource.data.referrerId == request.auth.uid ||
+        resource.data.inviteeId == request.auth.uid
+      );
+      // Writes must be done by Admin SDK (Cloud Functions)
+      allow create, update, delete: if false;
+    }
+
+    // EVENTS (audit trail) - server writes, user can read their own events
+    match /events/{eventId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    // LEADERBOARD - public read, server-only writes
+    match /leaderboard/{docId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // CHECKINS - user can create once per day; no update/delete
+    match /checkins/{uid}/{month}/{day} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && !exists(/databases/$(database)/documents/checkins/$(uid)/$(month)/$(day))
+        && request.resource.data.keys().hasOnly(['createdAt','source']);
+      allow update, delete: if false;
+    }
+  }
+}

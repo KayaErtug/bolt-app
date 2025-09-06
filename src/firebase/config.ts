@@ -1,5 +1,6 @@
 // src/firebase/config.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Firebase config bilgilerin
@@ -15,6 +16,8 @@ const firebaseConfig = {
 // Tekrar initialize etmesini önlemek için kontrol
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Firestore instance
+// Auth & Firestore instance
+export const auth = getAuth(app);
 export const db = getFirestore(app);
+
 export default app;

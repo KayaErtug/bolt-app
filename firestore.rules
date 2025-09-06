@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // USERS collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isUserCreateSafe();
+      allow update: if isOwner(userId) && isUserUpdateSafe();
+      allow delete: if false;
+
+      function isUserCreateSafe() {
+        return request.resource.data.keys().hasOnly([
+          'displayName', 'avatarUrl', 'country', 'language',
+          'twitter', 'telegram', 'walletAddress', 'createdAt', 'updatedAt'
+        ]);
+      }
+
+      function isUserUpdateSafe() {
+        let d = request.resource.data.diff(resource.data);
+        return !(
+          'points' in d.changedKeys() ||
+          'activeScore' in d.changedKeys() ||
+          'active' in d.changedKeys() ||
+          'streakDays' in d.changedKeys() ||
+          'invitedCount' in d.changedKeys() ||
+          'activeReferrals' in d.changedKeys() ||
+          'pendingRewards' in d.changedKeys() ||
+          'referralCode' in d.changedKeys() ||
+          'roles' in d.changedKeys() ||
+          'createdAt' in d.changedKeys()
+        );
+      }
+    }
+
+    // CHECKINS collection
+    match /checkins/{checkinId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['userId','timestamp']);
+      allow update, delete: if false;
+    }
+
+    // INVITES collection
+    match /invites/{inviteId} {
+      allow read: if isSignedIn() && (
+        resource.data.referrerId == request.auth.uid ||
+        resource.data.inviteeId == request.auth.uid
+      );
+      allow create, update, delete: if false;
+    }
+
+    // EVENTS collection
+    match /events/{eventId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    // LEADERBOARD collection
+    match /leaderboard/{docId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

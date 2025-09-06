@@ -3,9 +3,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
+
 // Sayfalar
 import DashboardPage from "./components/dashboard/DashboardPage";
 import ReferralsPage from "./components/dashboard/ReferralsPage";
+import DailyCheckinPage from "./components/dashboard/DailyCheckinPage";
 import TasksPage from "./components/dashboard/TasksPage";
 import LeaderboardPage from "./components/dashboard/LeaderboardPage";
 import NFTShowcase from "./components/dashboard/NFTShowcase";
@@ -14,6 +16,7 @@ import AchievementsPage from "./components/dashboard/AchievementsPage";
 import SettingsPage from "./components/dashboard/SettingsPage";
 import ActivationZonePage from "./components/dashboard/ActivationZonePage";
 import LoginForm from "./components/LoginForm";
+
 
 function App() {
   const { user, loading } = useAuth();
@@ -32,6 +35,7 @@ function App() {
           <>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/referrals" element={<ReferralsPage />} />
+            <Route path="/daily-checkin" element={<DailyCheckinPage />} /> 
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/nft-showcase" element={<NFTShowcase />} />
@@ -40,6 +44,7 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
             <Route path="/activation-zone" element={<ActivationZonePage />} />
+
           </>
         )}
       </Routes>
