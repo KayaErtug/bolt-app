@@ -40,19 +40,14 @@ function formatTimeAgo(date: Date): string {
   const diffSec = Math.max(0, Math.floor((now - date.getTime()) / 1000));
 
   if (diffSec < 60) return `${diffSec}s ago`;
-
   const minutes = Math.floor(diffSec / 60);
   if (minutes < 60) return `${minutes}m ago`;
-
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
-
   const months = Math.floor(days / 30);
   if (months < 12) return `${months}mo ago`;
-
   const years = Math.floor(months / 12);
   return `${years}y ago`;
 }
@@ -60,7 +55,6 @@ function formatTimeAgo(date: Date): string {
 /* -------------------------------------------------------------------------- */
 /*  Yardımcı bileşenler                                                       */
 /* -------------------------------------------------------------------------- */
-
 type StatCardProps = {
   title: string;
   value: string | number;
@@ -143,7 +137,6 @@ const ActivityItem: React.FC<{ text: string; time: string; pts?: number }> = ({ 
 /* -------------------------------------------------------------------------- */
 /*  Ana Sayfa                                                                  */
 /* -------------------------------------------------------------------------- */
-
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const [showAllMenus, setShowAllMenus] = useState(false);
@@ -171,8 +164,6 @@ const DashboardPage: React.FC = () => {
         const snapshot = await getDocs(q);
         const acts = snapshot.docs.map((doc) => {
           const data = doc.data() as any;
-
-          // createdAt güvenli çözümleme
           let createdDate: Date | null = null;
           const raw = data?.createdAt;
 
@@ -181,7 +172,6 @@ const DashboardPage: React.FC = () => {
           } else if (raw && typeof raw.toDate === "function") {
             createdDate = raw.toDate();
           } else if (typeof raw === "number") {
-            // epoch ms ise
             createdDate = new Date(raw);
           }
 
@@ -190,15 +180,12 @@ const DashboardPage: React.FC = () => {
           return {
             text: `Referral: ${data?.referredUserEmail ?? "unknown"}`,
             time,
-            pts: 100, // Örnek puan
+            pts: 100,
           };
         });
 
         setActivities(acts);
-        setStats((prev) => ({
-          ...prev,
-          referrals: acts.length,
-        }));
+        setStats((prev) => ({ ...prev, referrals: acts.length }));
       } catch (err) {
         console.error("Veri çekme hatası:", err);
       }
@@ -208,16 +195,16 @@ const DashboardPage: React.FC = () => {
   }, [user]);
 
   const menus = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: Users, label: "Referrals", path: "/referrals" },
-    { icon: Flame, label: "Daily Check-In", path: "/daily-checkin" },
-    { icon: Star, label: "NFT Collections", path: "/nft-showcase" },
-    { icon: ListChecks, label: "Tasks", path: "/tasks" },
-    { icon: TrendingUp, label: "Leaderboard", path: "/leaderboard" },
-    { icon: Trophy, label: "Achievements", path: "/achievements" },
-    { icon: ShieldCheck, label: "Portfolio", path: "/portfolio" },
-    { icon: Settings, label: "Settings", path: "/settings" },
-    { icon: Gamepad2, label: "Activation Zone", path: "/activation-zone" },
+    { icon: Home, label: "Dashboard", path: "/dashboard", isVisible: true },
+    { icon: Users, label: "Referrals", path: "/referrals", isVisible: true },
+    { icon: Flame, label: "Daily Check-In", path: "/daily-checkin", isVisible: true },
+    { icon: Star, label: "NFT Collections", path: "/nft-showcase", isVisible: true },
+    { icon: ListChecks, label: "Tasks", path: "/tasks", isVisible: false }, // gizli
+    { icon: TrendingUp, label: "Leaderboard", path: "/leaderboard", isVisible: true },
+    { icon: Trophy, label: "Achievements", path: "/achievements", isVisible: true },
+    { icon: ShieldCheck, label: "Portfolio", path: "/portfolio", isVisible: false }, // gizli
+    { icon: Settings, label: "Settings", path: "/settings", isVisible: true },
+    { icon: Gamepad2, label: "Activation Zone", path: "/activation-zone", isVisible: true },
   ];
 
   return (
@@ -235,25 +222,27 @@ const DashboardPage: React.FC = () => {
         </div>
 
         <nav className="mt-2 grid gap-2">
-          {menus.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.label}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl border border-white/10 px-3 py-2 transition ${
-                    isActive
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
-                      : "bg-white/5 hover:bg-white/10 text-white/80"
-                  }`
-                }
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-sm">{item.label}</span>
-              </NavLink>
-            );
-          })}
+          {menus
+            .filter((item) => item.isVisible)
+            .map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl border border-white/10 px-3 py-2 transition ${
+                      isActive
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
+                        : "bg-white/5 hover:bg-white/10 text-white/80"
+                    }`
+                  }
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-sm">{item.label}</span>
+                </NavLink>
+              );
+            })}
         </nav>
 
         <button
@@ -297,7 +286,7 @@ const DashboardPage: React.FC = () => {
           {/* Menüler Mobil İçin */}
           <div className="mb-6 lg:hidden">
             <div className="grid gap-2">
-              {(showAllMenus ? menus : menus.slice(0, 4)).map((item) => {
+              {(showAllMenus ? menus.filter(m => m.isVisible) : menus.filter(m => m.isVisible).slice(0, 4)).map((item) => {
                 const Icon = item.icon;
                 return (
                   <NavLink

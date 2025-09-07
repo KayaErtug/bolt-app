@@ -1,3 +1,5 @@
+// Dosya: src/components/dashboard/LeaderboardPage.tsx
+
 import React, { useState } from 'react';
 import { 
   Trophy, 
@@ -8,7 +10,6 @@ import {
   Users,
   Coins,
   Award,
-  Calendar,
   Home
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -99,6 +100,7 @@ const LeaderboardPage: React.FC = () => {
 
         {/* Content */}
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 space-y-6">
+
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
@@ -142,20 +144,12 @@ const LeaderboardPage: React.FC = () => {
           {/* Filter Controls */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-md">
-              <div className="flex gap-1">
-                {[
-                  { key: 'all-time', label: 'All Time' },
-                  { key: 'monthly', label: 'This Month' },
-                  { key: 'weekly', label: 'This Week' }
-                ].map((periodOption) => (
+              <div className="flex gap-1 flex-wrap">
+                {[{ key: 'all-time', label: 'All Time' }, { key: 'monthly', label: 'This Month' }, { key: 'weekly', label: 'This Week' }].map(periodOption => (
                   <button
                     key={periodOption.key}
                     onClick={() => setPeriod(periodOption.key as any)}
-                    className={`px-4 py-2 rounded-lg transition ${
-                      period === periodOption.key
-                        ? 'bg-gradient-to-r from-emerald-500 to-sky-500 text-white'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`px-4 py-2 rounded-lg transition ${period === periodOption.key ? 'bg-gradient-to-r from-emerald-500 to-sky-500 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
                   >
                     {periodOption.label}
                   </button>
@@ -164,20 +158,12 @@ const LeaderboardPage: React.FC = () => {
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-md">
-              <div className="flex gap-1">
-                {[
-                  { key: 'points', label: 'Points' },
-                  { key: 'referrals', label: 'Referrals' },
-                  { key: 'tasks', label: 'Tasks' }
-                ].map((categoryOption) => (
+              <div className="flex gap-1 flex-wrap">
+                {[{ key: 'points', label: 'Points' }, { key: 'referrals', label: 'Referrals' }, { key: 'tasks', label: 'Tasks' }].map(categoryOption => (
                   <button
                     key={categoryOption.key}
                     onClick={() => setCategory(categoryOption.key as any)}
-                    className={`px-4 py-2 rounded-lg transition ${
-                      category === categoryOption.key
-                        ? 'bg-gradient-to-r from-emerald-500 to-sky-500 text-white'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
+                    className={`px-4 py-2 rounded-lg transition ${category === categoryOption.key ? 'bg-gradient-to-r from-emerald-500 to-sky-500 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
                   >
                     {categoryOption.label}
                   </button>
@@ -187,116 +173,58 @@ const LeaderboardPage: React.FC = () => {
           </div>
 
           {/* Top 3 Podium */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-md">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md overflow-x-auto">
             <h2 className="text-xl font-semibold mb-6 text-center">Top Performers</h2>
-            <div className="flex justify-center items-end gap-8">
-              {/* 2nd */}
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full grid place-items-center mb-3">
-                  <span className="text-white font-bold text-xl">2</span>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+              {[
+                { pos: 2, data: leaderboardData[1], size: 'w-20 h-20' },
+                { pos: 1, data: leaderboardData[0], size: 'w-24 h-24', crown: true },
+                { pos: 3, data: leaderboardData[2], size: 'w-20 h-20' },
+              ].map(({ pos, data, size, crown }) => (
+                <div key={pos} className="flex flex-col items-center text-center flex-1">
+                  {crown && <Crown className="w-8 h-8 text-yellow-500 mb-2" />}
+                  <div className={`${size} bg-gradient-to-r ${pos===1?'from-yellow-400 to-yellow-600': pos===2?'from-gray-400 to-gray-600':'from-orange-400 to-orange-600'} rounded-full grid place-items-center mb-3`}>
+                    <span className={`text-white font-bold ${pos===1?'text-2xl':'text-xl'}`}>{pos}</span>
+                  </div>
+                  <div className={`bg-white/5 border border-white/10 rounded-lg p-4 w-full text-center`}>
+                    <p className={`font-bold ${pos===1?'font-bold':'font-semibold'}`}>{data.name}</p>
+                    <p className={`${pos===1?'text-yellow-400':'text-white/70'} text-sm`}>{data.points.toLocaleString()} pts</p>
+                  </div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 min-w-[120px]">
-                  <p className="font-semibold">{leaderboardData[1].name}</p>
-                  <p className="text-white/70 text-sm">{leaderboardData[1].points.toLocaleString()} pts</p>
-                </div>
-              </div>
-
-              {/* 1st */}
-              <div className="text-center scale-110">
-                <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                <div className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full grid place-items-center mb-3">
-                  <span className="text-white font-bold text-2xl">1</span>
-                </div>
-                <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-lg p-4 min-w-[140px]">
-                  <p className="font-bold">{leaderboardData[0].name}</p>
-                  <p className="text-yellow-400 text-sm">{leaderboardData[0].points.toLocaleString()} pts</p>
-                </div>
-              </div>
-
-              {/* 3rd */}
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full grid place-items-center mb-3">
-                  <span className="text-white font-bold text-xl">3</span>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 min-w-[120px]">
-                  <p className="font-semibold">{leaderboardData[2].name}</p>
-                  <p className="text-white/70 text-sm">{leaderboardData[2].points.toLocaleString()} pts</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Full Leaderboard */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden backdrop-blur-md">
-            <div className="px-6 py-4 border-b border-white/10">
-              <h2 className="text-xl font-semibold">Full Rankings</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Rank</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">User</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Points</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Level</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Referrals</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Tasks</th>
-                    <th className="text-left text-white/70 font-medium py-3 px-6">Trend</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboardData.map((user) => (
-                    <tr
-                      key={user.id}
-                      className={`border-b border-white/10 hover:bg-white/5 transition ${
-                        user.rank <= 3 ? 'bg-emerald-500/5' : ''
-                      }`}
-                    >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          {getRankIcon(user.rank)}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getRankBadgeColor(user.rank)} grid place-items-center`}>
-                            <span className="text-white font-semibold text-sm">
-                              {user.name[0]}{user.surname[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">{user.name} {user.surname}</p>
-                            <p className="text-white/60 text-xs">Member since {user.joinDate}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-1">
-                          <Coins className="w-4 h-4 text-emerald-400" />
-                          <span className="text-emerald-300 font-semibold">{user.points.toLocaleString()}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="px-2 py-1 bg-sky-500/20 text-sky-300 rounded-full text-xs font-medium">
-                          Level {user.level}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="text-purple-300 font-semibold">{user.referrals}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="text-amber-300 font-semibold">{user.tasksCompleted}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        {getTrendIcon(user.trend, user.rankChange)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Full Leaderboard (Düzeltilmiş Responsive Liste) */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-md">
+            <h2 className="text-xl font-semibold mb-4">Full Rankings</h2>
+            <div className="space-y-3">
+              {leaderboardData.map(user => (
+                <div key={user.id} className={`flex items-center justify-between rounded-xl p-3 border border-white/10 ${user.rank <= 3 ? 'bg-emerald-500/5' : 'bg-white/5 hover:bg-white/10'} transition`}>
+                  {/* Sol Bölüm: Sıra ve Kullanıcı Adı */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex-shrink-0">
+                      {getRankIcon(user.rank)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{user.name} {user.surname}</p>
+                      <p className="text-white/60 text-xs">Member since {user.joinDate}</p>
+                    </div>
+                  </div>
+                  {/* Sağ Bölüm: Puanlar ve Trend */}
+                  <div className="flex items-center gap-4 text-right">
+                    <div className="flex flex-col items-end">
+                      <span className="text-emerald-300 font-semibold">{user.points.toLocaleString()} pts</span>
+                      <span className="text-white/60 text-xs hidden sm:block">
+                        Level: {user.level} | Ref: {user.referrals}
+                      </span>
+                    </div>
+                    {getTrendIcon(user.trend, user.rankChange)}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-
         </main>
       </div>
     </div>
