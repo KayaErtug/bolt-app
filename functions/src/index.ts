@@ -86,6 +86,9 @@ export const applyReferralCode = onCall(async (request) => {
     throw new Error("You have already linked a referral code.");
   }
 
+  // get invitee info from Auth
+  const authUser = await admin.auth().getUser(uid);
+
   await db.runTransaction(async (tx) => {
     const referrerRef = db.collection("users").doc(referrer.uid);
     const inviteRef = db.collection("invites").doc();
@@ -93,6 +96,8 @@ export const applyReferralCode = onCall(async (request) => {
     tx.set(inviteRef, {
       referrerId: referrer.uid,
       inviteeId: uid,
+      inviteeName: authUser.displayName || null, // 👈 added
+      inviteeAvatar: authUser.photoURL || null,  // 👈 added
       status: "pending",
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -162,6 +167,7 @@ export const onCheckInCreated = onDocumentCreated(
 // ======================================================
 // 3) computeActiveScore (callable)
 // emailVerified + MFA + 7-day streak + task diversity (>=3 categories)
+// also handles invite activation & milestone rewards
 // ======================================================
 export const computeActiveScore = onCall(async (request) => {
   const uid = request.auth?.uid;
@@ -232,7 +238,7 @@ export const computeActiveScore = onCall(async (request) => {
         const referrerRef = db.collection("users").doc(referrerId);
         tx.update(referrerRef, {
           activeReferrals: admin.firestore.FieldValue.increment(1),
-          points: admin.firestore.FieldValue.increment(50), // activation bonus
+          points: admin.firestore.FieldValue.increment(50), // base activation bonus
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       });
@@ -249,6 +255,37 @@ export const computeActiveScore = onCall(async (request) => {
         referrerId,
         inviteeId: uid,
       });
+
+      // ---- Milestone rewards ----
+      const referrerDoc = await db.collection("users").doc(referrerId).get();
+      const activeReferrals = Number(referrerDoc.get("activeReferrals") ?? 0);
+
+      const milestones = [
+        { threshold: 2, reward: { points: 10000, label: "10,000 points" } },
+        { threshold: 50, reward: { nft: true, label: "Exclusive NFT" } },
+        { threshold: 100, reward: { whitelist: true, label: "Whitelist Access" } },
+      ];
+
+      for (const m of milestones) {
+        if (activeReferrals === m.threshold) {
+          // Add milestone reward
+          await db.collection("rewards").add({
+            referrerId,
+            milestone: m.threshold,
+            reward: m.reward,
+            at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          await db.collection("events").add({
+            type: "milestone.reached",
+            referrerId,
+            milestone: m.threshold,
+            at: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          logger.info("Milestone reached", { referrerId, milestone: m.threshold });
+        }
+      }
     }
   }
 

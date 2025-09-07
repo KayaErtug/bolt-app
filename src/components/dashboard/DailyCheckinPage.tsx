@@ -10,13 +10,10 @@ import {
   Clock,
   Info,
 } from "lucide-react";
-
-// Firebase
-import { collection, doc, getDocs, setDoc, query, where } from "firebase/firestore";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../firebase/config";
 
-// Helper: month names
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -47,46 +44,39 @@ const DailyCheckinPage: React.FC = () => {
         return;
       }
 
-      const currentMonthStart = new Date(viewYear, viewMonth, 1);
-      const currentMonthEnd = new Date(viewYear, viewMonth + 1, 0);
-
+      const monthString = `${viewYear}-${viewMonth + 1}`; // 0-indexed month
       try {
-        const checkinsRef = collection(db, "checkins", user.uid, `${viewYear}-${viewMonth + 1}`);
-        const q = query(
-          checkinsRef,
-          where("createdAt", ">=", currentMonthStart),
-          where("createdAt", "<=", currentMonthEnd)
-        );
-        const querySnapshot = await getDocs(q);
+        const monthRef = collection(db, "checkins", user.uid, monthString);
+        const querySnapshot = await getDocs(monthRef);
 
         const fetchedCheckins: number[] = [];
         let currentPoints = 0;
 
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const checkinDate = new Date(data.createdAt.toDate());
-          fetchedCheckins.push(checkinDate.getDate());
-          currentPoints += 10;
+          if (data.day) {
+            fetchedCheckins.push(data.day);
+            currentPoints += 10;
+          }
         });
 
         const sortedDays = [...fetchedCheckins].sort((a, b) => a - b);
         let tempStreak = 0;
         if (sortedDays.length > 0) {
-            tempStreak = 1;
-            for (let i = sortedDays.length - 2; i >= 0; i--) {
-                if (sortedDays[i] === sortedDays[i + 1] - 1) {
-                    tempStreak++;
-                } else {
-                    break;
-                }
+          tempStreak = 1;
+          for (let i = sortedDays.length - 2; i >= 0; i--) {
+            if (sortedDays[i] === sortedDays[i + 1] - 1) {
+              tempStreak++;
+            } else {
+              break;
             }
+          }
         }
 
         setCheckedDays(fetchedCheckins);
         setTotalCheckins(fetchedCheckins.length);
         setMonthlyPoints(currentPoints);
         setStreak(tempStreak);
-
       } catch (error) {
         console.error("Error fetching checkins: ", error);
       } finally {
@@ -106,7 +96,6 @@ const DailyCheckinPage: React.FC = () => {
 
   const isTodayInView =
     viewYear === today.getFullYear() && viewMonth === today.getMonth();
-
   const isTodayChecked =
     isTodayInView && checkedDays.includes(today.getDate());
 
@@ -119,31 +108,30 @@ const DailyCheckinPage: React.FC = () => {
       alert("Today's check-in has already been completed. ✅");
       return;
     }
-
     if (!user) {
-        alert("You must be logged in to check in.");
-        return;
+      alert("You must be logged in to check in.");
+      return;
     }
 
     try {
-      const checkinRef = doc(collection(db, "checkins", user.uid, `${viewYear}-${viewMonth + 1}`, `${today.getDate()}`));
-      await setDoc(checkinRef, {
+      const monthString = `${viewYear}-${viewMonth + 1}`;
+      const dayDocRef = doc(db, "checkins", user.uid, monthString, `${today.getDate()}`);
+      await setDoc(dayDocRef, {
+        day: today.getDate(),
         createdAt: new Date(),
         source: "web",
       });
 
-      const newCheckedDays = [...checkedDays, today.getDate()].sort((a,b) => a-b);
+      const newCheckedDays = [...checkedDays, today.getDate()].sort((a, b) => a - b);
       setCheckedDays(newCheckedDays);
       setTotalCheckins(totalCheckins + 1);
       setMonthlyPoints(monthlyPoints + 10);
 
       let newStreak = 1;
-      for (let i = newCheckedDays.length - 2; i >= 0; i--) {
-        if (newCheckedDays[i] === newCheckedDays[i + 1] - 1) {
-          newStreak++;
-        } else {
-          break;
-        }
+      const reversedDays = newCheckedDays.slice().sort((a, b) => b - a);
+      for (let i = 1; i < reversedDays.length; i++) {
+        if (reversedDays[i - 1] - reversedDays[i] === 1) newStreak++;
+        else break;
       }
       setStreak(newStreak);
 
@@ -186,11 +174,11 @@ const DailyCheckinPage: React.FC = () => {
     : 100;
 
   if (isLoading) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-black text-white">
-            <p>Loading check-in data...</p>
-        </div>
-      );
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p>Loading check-in data...</p>
+      </div>
+    );
   }
 
   return (
@@ -210,8 +198,9 @@ const DailyCheckinPage: React.FC = () => {
           </Link>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <main className="mx-auto w-full max-w-full sm:max-w-7xl flex-1 p-2 sm:p-6 space-y-6">
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <div>
@@ -252,17 +241,17 @@ const DailyCheckinPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Check-in CTA + Streak Progress */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          {/* Check-in CTA + Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold mb-1">Today's Check-In</h2>
                   <p className="text-white/70 text-sm">
                     Log in every day to maintain your streak. Longer streaks earn extra bonuses.
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={handleCheckIn}
                     disabled={isTodayChecked || isLoading}
@@ -285,8 +274,9 @@ const DailyCheckinPage: React.FC = () => {
                   )}
                 </div>
               </div>
+
               <div className="mt-6">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                   <div className="text-sm text-white/70 flex items-center gap-2">
                     <Flame className="w-4 h-4 text-amber-300" />
                     Next reward:
@@ -336,7 +326,7 @@ const DailyCheckinPage: React.FC = () => {
                 <h3 className="text-lg font-semibold">Tip</h3>
               </div>
               <p className="text-white/70 text-sm">
-                Completing your check-in at the <strong>same time every day</strong> helps maintain your streak.
+                Completing your check-in at the **same time every day** helps maintain your streak.
                 Longer streaks reward you with seasonal bonuses and special badges.
               </p>
               <ul className="mt-4 space-y-2 text-sm">
@@ -350,15 +340,15 @@ const DailyCheckinPage: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                  30-day streak for the <strong>grand prize</strong>
+                  30-day streak for the **grand prize**
                 </li>
               </ul>
             </div>
           </div>
 
           {/* Calendar */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-            <div className="flex items-center justify-between mb-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md overflow-x-auto">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold">
                   {monthNames[viewMonth]} {viewYear}
@@ -388,6 +378,7 @@ const DailyCheckinPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Weekday headers */}
             <div className="grid grid-cols-7 text-center text-xs text-white/60 mb-2">
               <div>Mon</div>
               <div>Tue</div>
@@ -398,9 +389,9 @@ const DailyCheckinPage: React.FC = () => {
               <div>Sun</div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
               {Array.from({ length: thisMonthDays.padStart }).map((_, i) => (
-                <div key={`pad-${i}`} className="h-12 rounded-lg bg-white/0 border border-transparent" />
+                <div key={`pad-${i}`} className="h-8 sm:h-12 rounded-lg bg-white/0 border border-transparent" />
               ))}
 
               {Array.from({ length: thisMonthDays.days }).map((_, i) => {
@@ -411,13 +402,13 @@ const DailyCheckinPage: React.FC = () => {
                 return (
                   <div
                     key={day}
-                    className={`h-12 rounded-lg border grid place-items-center relative
+                    className={`h-8 sm:h-12 rounded-lg border grid place-items-center relative
                       ${isChecked ? "bg-emerald-500/10 border-emerald-500/30" : "bg-white/5 border-white/10"}
                       ${isToday ? "ring-2 ring-emerald-400" : ""}`}
                   >
-                    <span className="text-sm">{day}</span>
+                    <span className="text-xs sm:text-sm">{day}</span>
                     {isChecked && (
-                      <CheckCircle2 className="absolute right-1 bottom-1 w-3 h-3 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300 absolute top-1 right-1" />
                     )}
                   </div>
                 );

@@ -1,6 +1,6 @@
 // Dosya: src/components/dashboard/DashboardPage.tsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Home,
   Trophy,
@@ -15,14 +15,47 @@ import {
   Users,
   TrendingUp,
   ShieldCheck,
-  MessageSquare,
-  PenTool,
   ListChecks,
   Star,
+  Gamepad2,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
 import { NavLink } from "react-router-dom";
-import { Gamepad2 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../firebase/config";
+
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
+
+/* -------------------------------------------------------------------------- */
+/*  Yardımcı: Harici kütüphane kullanmadan "x time ago" formatlayıcı          */
+/* -------------------------------------------------------------------------- */
+function formatTimeAgo(date: Date): string {
+  const now = Date.now();
+  const diffSec = Math.max(0, Math.floor((now - date.getTime()) / 1000));
+
+  if (diffSec < 60) return `${diffSec}s ago`;
+
+  const minutes = Math.floor(diffSec / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+
+  const years = Math.floor(months / 12);
+  return `${years}y ago`;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Yardımcı bileşenler                                                       */
@@ -36,29 +69,28 @@ type StatCardProps = {
   gradient: string;
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, delta, icon: Icon, gradient }) => {
-  return (
-    <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 shadow hover:shadow-2xl hover:shadow-emerald-500/10 transition-shadow">
-      <div className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient}`} />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-sm text-white/70">{title}</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
-          {delta && <p className="mt-2 text-xs text-emerald-300">{delta}</p>}
-        </div>
-        <div className="rounded-xl bg-white/10 p-3 border border-white/10">
-          <Icon className="h-5 w-5 text-white" />
-        </div>
+const StatCard: React.FC<StatCardProps> = ({ title, value, delta, icon: Icon, gradient }) => (
+  <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 shadow hover:shadow-2xl hover:shadow-emerald-500/10 transition-shadow">
+    <div className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient}`} />
+    <div className="relative flex items-start justify-between">
+      <div>
+        <p className="text-sm text-white/70">{title}</p>
+        <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+        {delta && <p className="mt-2 text-xs text-emerald-300">{delta}</p>}
+      </div>
+      <div className="rounded-xl bg-white/10 p-3 border border-white/10">
+        <Icon className="h-5 w-5 text-white" />
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 type ProgressRingProps = { value: number; size?: number; stroke?: number; label?: string };
 const ProgressRing: React.FC<ProgressRingProps> = ({ value, size = 96, stroke = 8, label }) => {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - Math.min(Math.max(value, 0), 1) * circumference;
+  const clamped = Math.min(Math.max(value, 0), 1);
+  const offset = circumference - clamped * circumference;
 
   return (
     <div className="relative grid place-items-center">
@@ -86,33 +118,12 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ value, size = 96, stroke = 
         />
       </svg>
       <div className="absolute text-center">
-        <p className="text-xl font-semibold text-white">{Math.round(value * 100)}%</p>
+        <p className="text-xl font-semibold text-white">{Math.round(clamped * 100)}%</p>
         {label && <p className="text-[11px] text-white/70">{label}</p>}
       </div>
     </div>
   );
 };
-
-type Achievement = {
-  id: string | number;
-  title: string;
-  desc?: string;
-  points?: number;
-  unlocked?: boolean;
-  progress?: number;
-  icon?: keyof typeof IconMap;
-};
-
-const IconMap = {
-  badge: ShieldCheck,
-  flame: Flame,
-  message: MessageSquare,
-  pen: PenTool,
-  tasks: ListChecks,
-  users: Users,
-  trophy: Trophy,
-  target: Target,
-} as const;
 
 const ActivityItem: React.FC<{ text: string; time: string; pts?: number }> = ({ text, time, pts }) => (
   <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-md">
@@ -136,22 +147,65 @@ const ActivityItem: React.FC<{ text: string; time: string; pts?: number }> = ({ 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const [showAllMenus, setShowAllMenus] = useState(false);
+  const [activities, setActivities] = useState<{ text: string; time: string; pts?: number }[]>([]);
+  const [stats, setStats] = useState({
+    level: 1,
+    xp: 0,
+    nextLevelXp: 1000,
+    streak: 0,
+    points: 0,
+    referrals: 0,
+  });
 
-  const stats = {
-    level: 6,
-    xp: 1350,
-    nextLevelXp: 2250,
-    streak: 7,
-    points: 2410,
-    referrals: 12,
-  };
+  // Firebase’den canlı verileri çek
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!user) return;
+      try {
+        const q = query(
+          collection(db, "referrals"),
+          where("referrerId", "==", user.uid),
+          orderBy("createdAt", "desc")
+        );
 
-  const activities = [
-    { text: "New referral joined", time: "2h ago", pts: 100 },
-    { text: "Completed social task", time: "1d ago", pts: 25 },
-    { text: "Daily login bonus", time: "1d ago", pts: 10 },
-    { text: "Published an educational post", time: "3d ago", pts: 60 },
-  ];
+        const snapshot = await getDocs(q);
+        const acts = snapshot.docs.map((doc) => {
+          const data = doc.data() as any;
+
+          // createdAt güvenli çözümleme
+          let createdDate: Date | null = null;
+          const raw = data?.createdAt;
+
+          if (raw instanceof Timestamp) {
+            createdDate = raw.toDate();
+          } else if (raw && typeof raw.toDate === "function") {
+            createdDate = raw.toDate();
+          } else if (typeof raw === "number") {
+            // epoch ms ise
+            createdDate = new Date(raw);
+          }
+
+          const time = createdDate ? formatTimeAgo(createdDate) : "just now";
+
+          return {
+            text: `Referral: ${data?.referredUserEmail ?? "unknown"}`,
+            time,
+            pts: 100, // Örnek puan
+          };
+        });
+
+        setActivities(acts);
+        setStats((prev) => ({
+          ...prev,
+          referrals: acts.length,
+        }));
+      } catch (err) {
+        console.error("Veri çekme hatası:", err);
+      }
+    };
+
+    fetchActivities();
+  }, [user]);
 
   const menus = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },

@@ -7,6 +7,7 @@ import { useAuth } from "./context/AuthContext";
 // Sayfalar
 import DashboardPage from "./components/dashboard/DashboardPage";
 import ReferralsPage from "./components/dashboard/ReferralsPage";
+
 import DailyCheckinPage from "./components/dashboard/DailyCheckinPage";
 import TasksPage from "./components/dashboard/TasksPage";
 import LeaderboardPage from "./components/dashboard/LeaderboardPage";
